@@ -14,6 +14,7 @@ const Upload = require('../models/upload')
 
 // include the s3 upload api module
 const s3Upload = require('../../lib/s3Upload')
+const s3Delete = require('../../lib/s3delete_file')
 
 // this is a collection of methods that help us detect situations when we need
 // to throw a custom error
@@ -69,8 +70,6 @@ router.get('/uploads/:id', requireToken, (req, res, next) => {
 router.post('/uploads', upload.single('file'), (req, res, next) => {
   // set owner of new upload to be current user
   // req.body.upload.owner = req.user.id
-  console.log('TESTTTTT')
-  console.log(req.body, req.file, 'TEST')
 
   s3Upload(req.file.originalname, req.file.buffer, req.file.mimetype)
     .then(data => {
@@ -116,12 +115,14 @@ router.patch('/uploads/:id', removeBlanks, (req, res, next) => {
 
 // DESTROY
 // DELETE /uploads/5a7db6c74d55bc51bdf39793
-router.delete('/uploads/:id', requireToken, (req, res, next) => {
+router.delete('/uploads/:id', (req, res, next) => {
   Upload.findById(req.params.id)
     .then(handle404)
     .then(upload => {
       // throw an error if current user doesn't own `upload`
-      requireOwnership(req, upload)
+      // requireOwnership(req, upload)
+      console.log(upload.fileName)
+      s3Delete(upload.fileName)
       // delete the upload ONLY IF the above didn't throw
       upload.deleteOne()
     })
