@@ -12,7 +12,9 @@ const uploadSchema = new mongoose.Schema({
   fileUrl: {
     type: String,
     required: true
-  }
+  },
+  comments: [],
+  likes: []
 }, {
   timestamps: true
 })

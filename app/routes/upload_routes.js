@@ -94,23 +94,22 @@ router.post('/uploads', upload.single('file'), (req, res, next) => {
 router.patch('/uploads/:id', removeBlanks, (req, res, next) => {
   // if the client attempts to change the `owner` property by including a new
   // owner, prevent that by deleting that key/value pair
-  console.log('TESTTT')
   // delete req.body.upload.owner
-  //
-  // Upload.findById(req.params.id)
-  //   .then(handle404)
-  //   .then(upload => {
-  //     // pass the `req` object and the Mongoose record to `requireOwnership`
-  //     // it will throw an error if the current user isn't the owner
-  //     requireOwnership(req, upload)
-  //
-  //     // pass the result of Mongoose's `.update` to the next `.then`
-  //     return upload.updateOne(req.body.upload)
-  //   })
-  //   // if that succeeded, return 204 and no JSON
-  //   .then(() => res.sendStatus(204))
-  //   // if an error occurs, pass it to the handler
-  //   .catch(next)
+
+  Upload.findById(req.params.id)
+    .then(handle404)
+    .then(upload => {
+      // pass the `req` object and the Mongoose record to `requireOwnership`
+      // it will throw an error if the current user isn't the owner
+      // requireOwnership(req, upload)
+
+      // pass the result of Mongoose's `.update` to the next `.then`
+      return upload.updateOne(req.body.upload)
+    })
+    // if that succeeded, return 204 and no JSON
+    .then(() => res.sendStatus(204))
+    // if an error occurs, pass it to the handler
+    .catch(next)
 })
 
 // DESTROY
