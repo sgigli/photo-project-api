@@ -14,7 +14,12 @@ const uploadSchema = new mongoose.Schema({
     required: true
   },
   comments: [],
-  likes: []
+  likes: [],
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  }
 }, {
   timestamps: true
 })
