@@ -1,5 +1,7 @@
 // require necessary NPM packages
 const express = require('express')
+const http = require('http')
+const socketio = require('socket.io')
 const mongoose = require('mongoose')
 const cors = require('cors')
 
@@ -35,6 +37,22 @@ mongoose.connect(db, {
 
 // instantiate express application object
 const app = express()
+const server = http.createServer(app)
+const io = socketio(server)
+
+io.on('connection', (socket) => {
+  console.log('New WebSocket connection')
+
+  socket.on('join', (id) => {
+    console.log('join', id.toString())
+    socket.join(id.toString())
+  })
+
+  socket.on('send-message', (id) => {
+    console.log('send', id.toString())
+    io.emit('refresh-comments', id.toString())
+  })
+})
 
 // set CORS headers on response from this API using the `cors` NPM package
 // `CLIENT_ORIGIN` is an environment variable that will be set on Heroku
@@ -72,7 +90,7 @@ app.use(uploadRoutes)
 app.use(errorHandler)
 
 // run API on designated port (4741 in this case)
-app.listen(port, () => {
+server.listen(port, () => {
   console.log('listening on port ' + port)
 })
 
