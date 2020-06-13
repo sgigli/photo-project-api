@@ -41,6 +41,7 @@ const router = express.Router()
 // GET /uploads
 router.get('/uploads', (req, res, next) => {
   Upload.find()
+    .populate('owner')
     .then(uploads => {
       // `uploads` will be an array of Mongoose documents
       // we want to convert each one to a POJO, so we use `.map` to
@@ -55,7 +56,7 @@ router.get('/uploads', (req, res, next) => {
 
 // SHOW
 // GET /uploads/5a7db6c74d55bc51bdf39793
-router.get('/uploads/:id', requireToken, (req, res, next) => {
+router.get('/uploads/:id', (req, res, next) => {
   // req.params.id will be set based on the `:id` in the route
   Upload.findById(req.params.id)
     .then(handle404)
@@ -70,13 +71,15 @@ router.get('/uploads/:id', requireToken, (req, res, next) => {
 router.post('/uploads', upload.single('file'), (req, res, next) => {
   // set owner of new upload to be current user
   // req.body.upload.owner = req.user.id
+  console.log(req.body)
 
   s3Upload(req.file.originalname, req.file.buffer, req.file.mimetype)
     .then(data => {
       return Upload.create({
         fileName: data.key,
         fileType: req.file.mimetype,
-        fileUrl: data.Location
+        fileUrl: data.Location,
+        owner: req.body.owner
       })
     })
     // respond to succesful `create` with status 201 and JSON of new "upload"
@@ -94,23 +97,22 @@ router.post('/uploads', upload.single('file'), (req, res, next) => {
 router.patch('/uploads/:id', removeBlanks, (req, res, next) => {
   // if the client attempts to change the `owner` property by including a new
   // owner, prevent that by deleting that key/value pair
-  console.log('TESTTT')
   // delete req.body.upload.owner
-  //
-  // Upload.findById(req.params.id)
-  //   .then(handle404)
-  //   .then(upload => {
-  //     // pass the `req` object and the Mongoose record to `requireOwnership`
-  //     // it will throw an error if the current user isn't the owner
-  //     requireOwnership(req, upload)
-  //
-  //     // pass the result of Mongoose's `.update` to the next `.then`
-  //     return upload.updateOne(req.body.upload)
-  //   })
-  //   // if that succeeded, return 204 and no JSON
-  //   .then(() => res.sendStatus(204))
-  //   // if an error occurs, pass it to the handler
-  //   .catch(next)
+
+  Upload.findById(req.params.id)
+    .then(handle404)
+    .then(upload => {
+      // pass the `req` object and the Mongoose record to `requireOwnership`
+      // it will throw an error if the current user isn't the owner
+      // requireOwnership(req, upload)
+
+      // pass the result of Mongoose's `.update` to the next `.then`
+      return upload.updateOne(req.body.upload)
+    })
+    // if that succeeded, return 204 and no JSON
+    .then(() => res.sendStatus(204))
+    // if an error occurs, pass it to the handler
+    .catch(next)
 })
 
 // DESTROY
