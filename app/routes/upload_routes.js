@@ -42,6 +42,7 @@ const router = express.Router()
 router.get('/uploads', (req, res, next) => {
   Upload.find()
     .populate('owner')
+    .populate('comments.owner')
     .then(uploads => {
       // `uploads` will be an array of Mongoose documents
       // we want to convert each one to a POJO, so we use `.map` to
@@ -59,6 +60,7 @@ router.get('/uploads', (req, res, next) => {
 router.get('/uploads/:id', (req, res, next) => {
   // req.params.id will be set based on the `:id` in the route
   Upload.findById(req.params.id)
+    .populate('comments.owner')
     .then(handle404)
     // if `findById` is succesful, respond with 200 and "upload" JSON
     .then(upload => res.status(200).json({ upload: upload.toObject() }))
@@ -71,7 +73,6 @@ router.get('/uploads/:id', (req, res, next) => {
 router.post('/uploads', upload.single('file'), (req, res, next) => {
   // set owner of new upload to be current user
   // req.body.upload.owner = req.user.id
-  console.log(req.body)
 
   s3Upload(req.file.originalname, req.file.buffer, req.file.mimetype)
     .then(data => {
@@ -94,7 +95,7 @@ router.post('/uploads', upload.single('file'), (req, res, next) => {
 
 // UPDATE
 // PATCH /uploads/5a7db6c74d55bc51bdf39793
-router.patch('/uploads/:id', removeBlanks, (req, res, next) => {
+router.patch('/uploads/:id', removeBlanks, requireToken, (req, res, next) => {
   // if the client attempts to change the `owner` property by including a new
   // owner, prevent that by deleting that key/value pair
   // delete req.body.upload.owner
@@ -105,9 +106,24 @@ router.patch('/uploads/:id', removeBlanks, (req, res, next) => {
       // pass the `req` object and the Mongoose record to `requireOwnership`
       // it will throw an error if the current user isn't the owner
       // requireOwnership(req, upload)
+      if (req.body.upload.comment) {
+        const comment = {
+          text: req.body.upload.comment,
+          date: new Date(),
+          owner: req.body.upload.owner
+        }
+        upload.comments.push(comment)
+      }
+
+      if (req.body.upload.likeIdIndex === -1) {
+        upload.likes.push(req.user.id)
+      } else {
+        upload.likes.splice(req.body.upload.likeIdIndex, 1)
+      }
 
       // pass the result of Mongoose's `.update` to the next `.then`
-      return upload.updateOne(req.body.upload)
+      return upload.save()
+      // return upload.updateOne(req.body.upload)
     })
     // if that succeeded, return 204 and no JSON
     .then(() => res.sendStatus(204))
@@ -123,7 +139,6 @@ router.delete('/uploads/:id', (req, res, next) => {
     .then(upload => {
       // throw an error if current user doesn't own `upload`
       // requireOwnership(req, upload)
-      console.log(upload.fileName)
       s3Delete(upload.fileName)
       // delete the upload ONLY IF the above didn't throw
       upload.deleteOne()
