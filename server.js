@@ -39,15 +39,9 @@ mongoose.connect(db, {
 const app = express()
 const server = http.createServer(app)
 const io = socketio(server)
-io.set('origins', '*:*')
 
 io.on('connection', (socket) => {
   console.log('New WebSocket connection')
-
-  socket.on('join', (id) => {
-    console.log('join', id.toString())
-    socket.join(id.toString())
-  })
 
   socket.on('send-message', (id) => {
     console.log('send', id.toString())
