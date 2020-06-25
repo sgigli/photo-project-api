@@ -13,7 +13,7 @@ const upload = multer({ storage })
 const Upload = require('../models/upload')
 
 // include the s3 upload api module
-const s3Upload = require('../../lib/s3Upload')
+const s3Upload = require('../../lib/s3upload')
 const s3Delete = require('../../lib/s3delete_file')
 
 // this is a collection of methods that help us detect situations when we need
@@ -24,7 +24,7 @@ const customErrors = require('../../lib/custom_errors')
 const handle404 = customErrors.handle404
 // we'll use this function to send 401 when a user tries to modify a resource
 // that's owned by someone else
-const requireOwnership = customErrors.requireOwnership
+// const requireOwnership = customErrors.requireOwnership
 
 // this is middleware that will remove blank fields from `req.body`, e.g.
 // { upload: { title: '', text: 'foo' } } -> { upload: { text: 'foo' } }

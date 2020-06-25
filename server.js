@@ -43,11 +43,6 @@ const io = socketio(server)
 io.on('connection', (socket) => {
   console.log('New WebSocket connection')
 
-  socket.on('join', (id) => {
-    console.log('join', id.toString())
-    socket.join(id.toString())
-  })
-
   socket.on('send-message', (id) => {
     console.log('send', id.toString())
     io.emit('refresh-comments', id.toString())
