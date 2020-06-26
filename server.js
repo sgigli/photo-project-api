@@ -47,6 +47,10 @@ io.on('connection', (socket) => {
     console.log('send', id.toString())
     io.emit('refresh-comments', id.toString())
   })
+
+  socket.on('update-action', () => {
+    io.emit('refresh-images', 'refresh')
+  })
 })
 
 // set CORS headers on response from this API using the `cors` NPM package
