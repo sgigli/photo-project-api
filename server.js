@@ -85,7 +85,7 @@ app.use(uploadRoutes)
 
 // register error handling middleware
 // note that this comes after the route middlewares, because it needs to be
-// passed any error messages from them
+// passed any error messages from them.
 app.use(errorHandler)
 
 // run API on designated port (4741 in this case)
